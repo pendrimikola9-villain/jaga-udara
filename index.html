@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JagaUdara - Solusi Digital Tanggap Karhutla Kalimantan</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Style CSS Kustom -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- STYLE ANIMASI ROTASI ORBIT 3D CAROUSEL HOLOGRAM & LAYER KABUT TEBAL -->
+  <style>
+    .holo-perspective { perspective: 1000px; }
+    .holo-card-slot {
+      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+      transform-style: preserve-3d;
+    }
+    
+    /* Posisi Depan (Utama) */
+    .slot-front {
+      transform: translate3d(0, 0, 40px) scale(1);
+      opacity: 1;
+      z-index: 30;
+      filter: drop-shadow(0 0 15px rgba(45, 212, 191, 0.4));
+    }
+    
+    /* Posisi Kanan (Mundur ke Belakang Kanan) */
+    .slot-right {
+      transform: translate3d(90px, -5px, -60px) scale(0.82) rotateY(-25deg);
+      opacity: 0.45;
+      z-index: 10;
+    }
+
+    /* Posisi Kiri (Mundur ke Belakang Kiri) */
+    .slot-left {
+      transform: translate3d(-90px, -5px, -60px) scale(0.82) rotateY(25deg);
+      opacity: 0.45;
+      z-index: 10;
+    }
+
+    /* Animasi Kabut Asap Tambahan */
+    @keyframes smokeDriftThick {
+      0% { transform: translateX(0) translateY(0) scale(1); opacity: 0.35; }
+      50% { transform: translateX(-5%) translateY(-2%) scale(1.05); opacity: 0.55; }
+      100% { transform: translateX(0) translateY(0) scale(1); opacity: 0.35; }
+    }
+    .smoke-layer-thick {
+      animation: smokeDriftThick 14s ease-in-out infinite;
+    }
+
+    /* BACKGROUND ALAM CUSTOM CSS AGAR PASTI MUNCUL */
+    .bg-posko-alam {
+      background-image: linear-gradient(to bottom, rgba(2, 6, 23, 0.45), rgba(2, 6, 23, 0.85)), url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2000&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans antialiased flex flex-col min-h-screen">
+
+  <!-- =================================================================
+    1. HEADER / NAVBAR (DARK THEME WITH HAMBURGER DRAWER MENU)
+  ================================================================== -->
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    
+    <!-- Sisi Kiri: Tombol Menu Garis Tiga + Logo Platform -->
+    <div class="flex items-center gap-3">
+      <!-- Tombol Garis Tiga (Open Side Drawer) -->
+      <button type="button" id="openMenuBtn" aria-label="Buka Menu" class="p-2 bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 rounded-xl transition active:scale-95 flex items-center justify-center">
+        <i data-lucide="menu" class="w-5 h-5 text-emerald-400"></i>
+      </button>
+
+      <!-- Logo Identitas Platform -->
+      <a href="#" class="flex items-center gap-2.5 font-bold text-xl text-emerald-400">
+        <div class="p-2 bg-emerald-950/80 rounded-xl border border-emerald-800">
+          <i data-lucide="leaf" class="w-5 h-5 text-emerald-400"></i>
+        </div>
+        <span>Jaga<span class="text-white">Udara</span></span>
+      </a>
+    </div>
+
+    <!-- Sisi Kanan: Tombol Aksi & Auth Profil -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Tombol Lapor Api -->
+      <a href="#lapor" class="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-red-950/50 flex items-center gap-1.5 active:scale-95">
+        <i data-lucide="siren" class="w-4 h-4 animate-pulse"></i>
+        <span class="hidden md:inline">Lapor Api</span>
+      </a>
+
+      <!-- Tombol Panduan (?) -->
+      <button type="button" id="openGuideBtn" aria-label="Panduan Pengguna" class="p-2 bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-slate-700/80 hover:border-amber-500/50 rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center">
+        <i data-lucide="help-circle" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Container Auth / Profil di Navbar -->
+      <div class="relative" id="authNavContainer">
+        <!-- Tombol utama yang akan berubah secara dinamis via JS -->
+        <button type="button" id="openAuthBtn" onclick="openLoginModal()" class="px-3.5 py-2 bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 hover:border-emerald-500/50 rounded-xl text-xs font-semibold transition backdrop-blur-md flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer">
+          <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
+          <span id="authBtnText" class="hidden sm:inline">Masuk / Daftar</span>
+        </button>
+
+        <!-- Dropdown Menu Profil (Muncul jika sudah login & tombol diklik) -->
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-slate-900/95 border border-slate-700/90 rounded-2xl shadow-2xl p-3 z-50 backdrop-blur-xl">
+          <div class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 mb-2">
+            <p class="text-xs font-bold text-white" id="userNameProfile">Relawan JagaUdara</p>
+            <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Relawan Aktif BPBD
+            </p>
+          </div>
+          <div class="space-y-1 text-xs text-slate-300">
+            <button type="button" onclick="openProfileModal()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-slate-200 transition flex items-center justify-between font-medium">
+              <span class="flex items-center gap-2"><i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i> Detail Profil & Aksi</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+            </button>
+            <button type="button" onclick="openCertModal()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-emerald-400 transition flex items-center justify-between font-medium">
+              <span class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4"></i> Lihat Sertifikat Digital</span>
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <div class="border-t border-slate-800 mt-2 pt-2">
+            <button type="button" onclick="handleLogout()" class="w-full text-left px-2.5 py-2 text-xs text-red-400 hover:bg-red-950/50 rounded-lg transition flex items-center gap-2 font-semibold">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span>Keluar Sesi (Logout)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =================================================================
+    2. OFF-CANVAS DRAWER MENU (RESPONSIVE SIDEBAR - DARK THEME)
+  ================================================================== -->
+  <div id="menuOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+
+  <aside id="sideDrawer" class="fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-slate-900 border-l border-slate-800 z-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between p-6 text-slate-200 overflow-y-auto">
+    <div>
+      <div class="flex items-center justify-between pb-5 border-b border-slate-800">
+        <div class="flex items-center gap-2 font-bold text-lg text-emerald-400">
+          <i data-lucide="leaf" class="w-5 h-5"></i>
+          <span>Jaga<span class="text-white">Udara</span></span>
+        </div>
+        <button id="closeMenuBtn" aria-label="Tutup Menu" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- NAVIGASI DRAWER DENGAN IKON COLORFUL & STATE AKTIF -->
+      <nav class="mt-6 flex flex-col gap-2">
+        <a href="#beranda" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 transition">
+          <i data-lucide="home" class="w-5 h-5 text-emerald-400"></i>
+          <span>Beranda</span>
+        </a>
+
+        <a href="#peta" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-teal-400 transition">
+          <i data-lucide="map" class="w-5 h-5 text-teal-400"></i>
+          <span>Peta Hotspot & ISPU</span>
+        </a>
+
+        <a href="#lapor" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-red-400 transition">
+          <i data-lucide="file-text" class="w-5 h-5 text-red-400"></i>
+          <span>Laporkan Karhutla</span>
+        </a>
+
+        <a href="#dashboard" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-cyan-400"></i>
+          <span>Dashboard Analitik</span>
+        </a>
+
+        <a href="#relawan" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-cyan-400"></i>
+          <span>Relawan</span>
+        </a>
+
+        <a href="#kalkulator" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition">
+          <i data-lucide="calculator" class="w-5 h-5 text-amber-400"></i>
+          <span>Edukasi & Kalkulator ISPA</span>
+        </a>
+
+        <a href="#edukasi-ai" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-blue-400 transition">
+          <i data-lucide="bot" class="w-5 h-5 text-blue-400"></i>
+          <span>Tanya AI Karhutla</span>
+        </a>
+
+        <a href="#donasi" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-pink-400 transition">
+          <i data-lucide="heart-handshake" class="w-5 h-5 text-pink-400"></i>
+          <span>Donasi & Aksi Sosial</span>
+        </a>
+
+        <a href="#posko" class="drawer-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition">
+          <i data-lucide="hospital" class="w-5 h-5 text-amber-400"></i>
+          <span>Posko Siaga & Faskes</span>
+        </a>
+
+
+      </nav>
+    </div>
+
+    <div class="bg-amber-950/40 p-4 rounded-2xl border border-amber-800/50 my-4">
+      <div class="flex items-center justify-between text-xs font-semibold text-amber-300 mb-1">
+        <span>ISPU LOKASI ANDA</span>
+        <span class="px-2 py-0.5 bg-amber-900 text-amber-200 rounded-md font-bold">155</span>
+      </div>
+      <p class="text-xs text-amber-200/90 leading-relaxed">
+        Kondisi udara di wilayah Anda tergolong <strong class="font-semibold text-amber-300">Tidak Sehat</strong>. Disarankan memakai masker N95 saat beraktivitas di luar.
+      </p>
+    </div>
+  </aside>
+
+  <!-- =================================================================
+    3. AREA KONTEN UTAMA
+  ================================================================== -->
+  <main class="flex-1 bg-slate-950 relative overflow-hidden">
+    
+    <!-- Ambient Glow Background -->
+    <div class="absolute top-10 -left-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+<!-- SECTION 1: HERO SECTION -->
+    <section id="beranda" class="relative w-full min-h-[calc(100vh-65px)] flex flex-col justify-center py-8 px-4 lg:px-8 bg-slate-950 overflow-hidden">
+      
+      <!-- GAMBAR BACKGROUND HUTAN + 3 LAYER KABUT ASAP SUPER TEBAL -->
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=2000&q=80" alt="Hutan Kalimantan" class="w-full h-full object-cover opacity-60">
+        
+        <!-- KONTAINER ASAP LENGKAP 3 LAYER -->
+        <div class="smoke-drift-container">
+          <div class="smoke-drift-1"></div>
+          <div class="smoke-drift-2"></div>
+          <div class="smoke-drift-3"></div>
+        </div>
+
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-slate-950/40 to-slate-950/80 smoke-layer-thick pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/40 to-slate-950/90"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto w-full relative z-10 my-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          <!-- KOLOM KIRI -->
+          <div class="lg:col-span-7 space-y-6 text-center lg:text-left py-2">
+            
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs font-semibold backdrop-blur-md shadow-md">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>INVENTION 2026 - Digital Environment Solution</span>
+              </div>
+              <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/70 border border-slate-800/80 text-slate-300 text-xs font-medium backdrop-blur-md">
+                <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+                <span id="liveClock">30 Sep 2026 • 02:10 WITA</span>
+              </div>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.18]">
+              Bersama Lindungi <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400">Langit Kalimantan</span> dari Asap Karhutla
+            </h1>
+
+            <p class="text-slate-200 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
+              Platform pemantauan titik api (<span class="font-bold text-white">hotspot</span>), kualitas udara (<span class="font-bold text-white">ISPU</span>) terkini, dan pelaporan aduan masyarakat berbasis koordinat presisi.
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-1">
+              <a href="#peta" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition duration-200 shadow-xl shadow-emerald-950/60 text-xs sm:text-sm flex items-center gap-2.5 active:scale-95">
+                <i data-lucide="map" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                <span>Buka Peta ISPU Interaktif</span>
+              </a>
+              <a href="#lapor" class="px-5 py-3 bg-slate-900/80 hover:bg-slate-800 text-slate-100 font-bold rounded-xl border border-slate-700/80 transition duration-200 text-xs sm:text-sm flex items-center gap-2.5 backdrop-blur-md active:scale-95 shadow-md">
+                <i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"></i>
+                <span>Laporkan Pembakaran Lahan</span>
+              </a>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950/50 border border-slate-800/70 backdrop-blur-md max-w-xl mx-auto lg:mx-0 text-center lg:text-left shadow-xl mt-4">
+              <div class="pl-2">
+                <p class="text-2xl sm:text-3xl font-black text-white" id="statHotspot">142</p>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Titik Api Aktif</p>
+              </div>
+              <div class="border-x border-slate-800/80 px-2">
+                <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="statLapor">89</p>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Laporan Selesai</p>
+              </div>
+              <div class="pr-2">
+                <p class="text-2xl sm:text-3xl font-black text-amber-400" id="statPosko">24</p>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Posko Siaga</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- KOLOM KANAN -->
+          <div class="lg:col-span-5 space-y-5">
+            
+            <!-- 1. Meter ISPU Live Card -->
+            <div class="bg-slate-950/30 rounded-2xl p-4 sm:p-5 border border-slate-800/60 shadow-2xl backdrop-blur-md">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
+                <div class="flex items-center gap-2.5">
+                  <div class="p-2 bg-amber-950/40 rounded-lg border border-amber-800/60 text-amber-400">
+                    <i data-lucide="wind" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-xs font-bold text-white">Kualitas Udara (ISPU)</h2>
+                    <p class="text-[10px] text-slate-400 flex items-center gap-1">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i>
+                      <span id="ispuLocation">Banjarbaru, Kalimantan Selatan</span>
+                    </p>
+                  </div>
+                </div>
+                <span class="text-[9px] font-bold px-2 py-0.5 bg-emerald-950/80 border border-emerald-800 text-emerald-400 rounded uppercase">LIVE</span>
+              </div>
+
+              <div class="py-3.5 text-center rounded-xl bg-amber-950/20 border border-amber-800/30 backdrop-blur-sm mt-3" id="ispuBox">
+                <span class="text-3xl sm:text-4xl font-black text-amber-400" id="ispuValue">155</span>
+                <p class="text-[10px] font-bold uppercase text-amber-300 mt-0.5" id="ispuStatus">TIDAK SEHAT (UNHEALTHY)</p>
+                <p class="text-[11px] text-slate-300 px-3 mt-1 leading-tight" id="ispuDesc">
+                  Kondisi udara berbahaya bagi kelompok rentan. Kurangi aktivitas luar ruangan dan gunakan masker N95.
+                </p>
+              </div>
+
+              <div class="mt-5 pt-3 border-t border-slate-800/50">
+                <label for="selectRegion" class="block text-[11px] font-semibold text-slate-400 mb-1.5">Pilih Wilayah Pemantauan:</label>
+                <select id="selectRegion" class="custom-select-box w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl p-2.5 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-inner">
+                  <option value="banjarbaru" selected>Banjarbaru (Kalsel) - ISPU 155 (Tidak Sehat)</option>
+                  <option value="palangkaraya">Palangkaraya (Kalteng) - ISPU 210 (Sangat Tidak Sehat)</option>
+                  <option value="pontianak">Pontianak (Kalbar) - ISPU 85 (Sedang)</option>
+                  <option value="samarinda">Samarinda (Kaltim) - ISPU 42 (Baik)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 2. WIDGET CAROUSEL HOLOGRAM 3D -->
+            <div class="bg-slate-950/30 border border-teal-500/30 rounded-2xl p-3.5 backdrop-blur-md shadow-[0_0_20px_rgba(20,184,166,0.15)] relative overflow-hidden">
+              <div class="flex items-center justify-between mb-2 relative z-20">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-950/80 text-teal-300 border border-teal-500/50 shadow-[0_0_10px_rgba(45,212,191,0.3)] flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-ping"></span> Hologram Feed
+                  </span>
+                  <span class="text-[10px] font-semibold text-slate-300">Update Kebakaran</span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <button id="holoPrevBtn" aria-label="Berita Sebelumnya" class="p-1 bg-slate-900/80 hover:bg-teal-950 text-teal-300 rounded-lg border border-teal-500/40 transition active:scale-95 shadow-md">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button id="holoNextBtn" aria-label="Berita Selanjutnya" class="p-1 bg-slate-900/80 hover:bg-teal-950 text-teal-300 rounded-lg border border-teal-500/40 transition active:scale-95 shadow-md">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="holo-perspective relative h-24 flex items-center justify-center my-1">
+                <div id="holoSlot0" class="holo-card-slot slot-front absolute w-full max-w-[270px] bg-slate-950/80 border border-teal-400/80 rounded-xl p-2.5 cursor-pointer backdrop-blur-md flex items-center gap-2.5">
+                  <img id="holoImg0" src="https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=200&q=80" alt="Banjarbaru" class="w-11 h-11 rounded-lg object-cover border border-teal-500/40 shrink-0">
+                  <div class="flex-1 min-w-0 text-left">
+                    <span id="holoTag0" class="text-[9px] text-teal-400 font-bold uppercase tracking-wider block truncate">Banjarbaru, Kalsel</span>
+                    <h4 id="holoTitle0" class="text-[11px] font-bold text-white line-clamp-2 leading-tight">Manggala Agni Padamkan 15 Ha Karhutla</h4>
+                    <p id="holoDate0" class="text-[8px] text-slate-400 mt-0.5">24 Sep 2026 • BPBD Kalsel</p>
+                  </div>
+                </div>
+
+                <div id="holoSlot1" class="holo-card-slot slot-right absolute w-full max-w-[270px] bg-slate-950/80 border border-teal-400/80 rounded-xl p-2.5 cursor-pointer backdrop-blur-md flex items-center gap-2.5">
+                  <img id="holoImg1" src="https://images.unsplash.com/photo-1511497584788-876761c119ee?auto=format&fit=crop&w=200&q=80" alt="Palangkaraya" class="w-11 h-11 rounded-lg object-cover border border-teal-500/40 shrink-0">
+                  <div class="flex-1 min-w-0 text-left">
+                    <span id="holoTag1" class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider block truncate">Palangkaraya, Kalteng</span>
+                    <h4 id="holoTitle1" class="text-[11px] font-bold text-white line-clamp-2 leading-tight">ISPU Palangkaraya Membaik ke Status Sedang</h4>
+                    <p id="holoDate1" class="text-[8px] text-slate-400 mt-0.5">23 Sep 2026 • BMKG Kalteng</p>
+                  </div>
+                </div>
+
+                <div id="holoSlot2" class="holo-card-slot slot-left absolute w-full max-w-[270px] bg-slate-950/80 border border-teal-400/80 rounded-xl p-2.5 cursor-pointer backdrop-blur-md flex items-center gap-2.5">
+                  <img id="holoImg2" src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=200&q=80" alt="Tanah Laut" class="w-11 h-11 rounded-lg object-cover border border-teal-500/40 shrink-0">
+                  <div class="flex-1 min-w-0 text-left">
+                    <span id="holoTag2" class="text-[9px] text-amber-400 font-bold uppercase tracking-wider block truncate">Tanah Laut, Kalsel</span>
+                    <h4 id="holoTitle2" class="text-[11px] font-bold text-white line-clamp-2 leading-tight">Aksi Reboisasi 1.000 Bibit Pohon Endemik</h4>
+                    <p id="holoDate2" class="text-[8px] text-slate-400 mt-0.5">22 Sep 2026 • Komunitas Hijau</p>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-center text-[9px] text-slate-400 font-medium mt-0.5">Klik card utama untuk membuka detail berita</p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+<!-- SECTION 2: PETA HOTSPOT & ISPU INTERAKTIF (GAMBAR INTERNAL LOKAL VIA HTML) -->
+    <section id="peta" class="relative py-16 lg:py-24 px-4 lg:px-8 border-t border-slate-800/80 overflow-hidden min-h-screen flex flex-col justify-center bg-slate-950">
+      
+      <!-- GAMBAR BACKGROUND INTERNAL LOKAL + OVERLAY TRANSPARAN -->
+      <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <img 
+          src="images/pulaukalimantan.jpg" 
+          alt="Latar Belakang Kalimantan" 
+          class="w-full h-full object-cover object-center opacity-75 scale-105"
+        >
+        <!-- Overlay Gelap Halus agar Teks & Peta Tetap Kontras dan Jernih -->
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/50 to-slate-950/85 z-1"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto w-full relative z-10 my-auto space-y-6">
+        
+        <!-- GRID 2 KOLOM (KIRI = NAVIGASI & FILTER, KANAN = PETA) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- KOLOM KIRI: TEKS CERAH & TAJAM -->
+          <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Badge GIS Menyala -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/90 border border-teal-400 text-teal-300 text-xs font-bold backdrop-blur-md shadow-[0_0_15px_rgba(20,184,166,0.4)]">
+              <i data-lucide="map-pin" class="w-4 h-4 text-teal-300"></i>
+              <span>Geographic Information System (GIS)</span>
+            </div>
+            
+            <!-- Judul Utama Putih & Gradasi Cerah -->
+            <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+              Peta Hotspot <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-amber-300 font-black">Karhutla & ISPU</span>
+            </h2>
+
+            <!-- Deskripsi Teks Putih Murni & Jernih -->
+            <p class="text-white text-xs sm:text-sm leading-relaxed font-semibold">
+              Pemantauan sebaran titik api aktif (NOAA/MODIS) dan stasiun pemantau kualitas udara real-time di seluruh Kalimantan.
+            </p>
+
+            <!-- Navigasi Cepat Ke Provinsi Kalimantan -->
+            <div class="space-y-2">
+              <label class="block text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Navigasi Cepat Provinsi:
+              </label>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="flyToProvince('kalsel')" class="px-3.5 py-1.5 bg-slate-900/90 hover:bg-emerald-950 text-emerald-300 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-xs font-bold transition shadow-lg backdrop-blur-md">Kalsel</button>
+                <button type="button" onclick="flyToProvince('kalteng')" class="px-3.5 py-1.5 bg-slate-900/90 hover:bg-emerald-950 text-emerald-300 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-xs font-bold transition shadow-lg backdrop-blur-md">Kalteng</button>
+                <button type="button" onclick="flyToProvince('kalbar')" class="px-3.5 py-1.5 bg-slate-900/90 hover:bg-emerald-950 text-emerald-300 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-xs font-bold transition shadow-lg backdrop-blur-md">Kalbar</button>
+                <button type="button" onclick="flyToProvince('kaltim')" class="px-3.5 py-1.5 bg-slate-900/90 hover:bg-emerald-950 text-emerald-300 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-xs font-bold transition shadow-md backdrop-blur-md">Kaltim</button>
+                <button type="button" onclick="flyToProvince('kaltara')" class="px-3.5 py-1.5 bg-slate-900/90 hover:bg-emerald-950 text-emerald-300 border border-emerald-500/60 hover:border-emerald-400 rounded-xl text-xs font-bold transition shadow-md backdrop-blur-md">Kaltara</button>
+              </div>
+            </div>
+
+            <!-- Filter Layer Peta 3 Warna -->
+            <div class="space-y-2 pt-3 border-t border-slate-700/80">
+              <label class="block text-xs font-black text-slate-100 uppercase tracking-wider">Filter Layer Peta:</label>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" id="toggleHotspots" class="px-3.5 py-2 bg-red-950/90 hover:bg-red-900 text-red-200 border border-red-500 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl backdrop-blur-md">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span> Titik Api
+                </button>
+                <button type="button" id="toggleIspuYellow" class="px-3.5 py-2 bg-amber-950/90 hover:bg-amber-900 text-amber-200 border border-amber-500 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl backdrop-blur-md">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> ISPU Tidak Sehat
+                </button>
+                <button type="button" id="toggleIspuGreen" class="px-3.5 py-2 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl backdrop-blur-md">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> ISPU Baik / Sehat
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KOLOM KANAN: PETA INTERAKTIF -->
+          <div class="lg:col-span-7">
+            <div class="relative w-full h-[450px] sm:h-[480px] rounded-3xl overflow-hidden border-4 border-teal-500/40 shadow-[0_0_35px_rgba(20,184,166,0.3)] z-10">
+              <div id="map" class="w-full h-full bg-slate-900"></div>
+
+              <!-- Legenda Peta Melayang -->
+              <div class="absolute bottom-6 left-4 z-[400] bg-slate-950/90 border border-teal-500/50 p-3 rounded-2xl backdrop-blur-xl shadow-2xl text-[11px] space-y-2 max-w-[210px]">
+                <p class="font-bold text-white border-b border-slate-800 pb-1 flex items-center justify-between">
+                  <span>Legenda Peta</span>
+                  <i data-lucide="info" class="w-3.5 h-3.5 text-teal-400"></i>
+                </p>
+                <div class="flex items-center gap-2 text-slate-200">
+                  <span class="w-3 h-3 rounded-full bg-red-500 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                  <span>Hotspot Sangat Tinggi</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-200">
+                  <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                  <span>Zona ISPU Tidak Sehat</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-200">
+                  <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                  <span>Zona ISPU Sehat / Baik</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+    
+<!-- SECTION 3: FORM PELAPORAN KARHUTLA -->
+    <section id="lapor" class="relative py-12 lg:py-20 px-4 border-t border-slate-800/80 overflow-hidden">
+      
+      <!-- GAMBAR BACKGROUND ORANGUTAN KALIMANTAN -->
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=2000&q=80" 
+          alt="Orangutan Kalimantan" 
+          class="w-full h-full object-cover object-center opacity-60"
+        >
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/50 to-slate-950/90 z-1"></div>
+      </div>
+
+      <div class="max-w-4xl mx-auto relative z-10">
+        
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/80 border border-red-800/80 text-red-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
+            <i data-lucide="siren" class="w-3.5 h-3.5"></i>
+            <span>Partisipasi Masyarakat & Perlindungan Satwa</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+            Laporkan Kejadian Karhutla di Wilayah Anda
+          </h2>
+          <p class="text-slate-300 text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+            Bantu tim Manggala Agni, BPBD, & Balai Konservasi merespons titik api secara cepat dengan mengirimkan data koordinat presisi serta foto lokasi kejadian.
+          </p>
+        </div>
+
+        <!-- CONTAINER BACKGROUND TRANSPARAN GLASSMORPHISM UNTUK FORM -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-3xl p-5 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6">
+
+          <!-- INFO BOX DENGAN ANIMASI TYPEWRITER DYNAMIS -->
+          <div class="bg-amber-950/40 border border-amber-500/50 p-4 sm:p-5 rounded-2xl backdrop-blur-md mb-6 shadow-xl flex items-start gap-3.5">
+            <div class="p-2 bg-amber-500/20 rounded-xl text-amber-400 shrink-0 mt-0.5">
+              <i data-lucide="heart" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <!-- Judul Dinamis -->
+              <h3 id="typedTitle" class="text-xs sm:text-sm font-bold text-amber-300 typing-cursor">
+                Mari Bersama Menjaga Habitat Kalimantan
+              </h3>
+              <!-- Deskripsi Dinamis -->
+              <p id="typedDesc" class="text-slate-200 text-xs sm:text-sm mt-1 leading-relaxed">
+                Kebakaran hutan tidak hanya merugikan manusia, tetapi juga menghancurkan kehidupan satwa endemik. Mari saling menjaga demi kelestarian oksigen dan masa depan bumi kita.
+              </p>
+            </div>
+          </div>
+
+          <form id="reportForm" class="space-y-6">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label for="reporterName" class="block text-xs font-semibold text-slate-200 mb-2">Nama Lengkap Pelapor *</label>
+                <input type="text" id="reporterName" required placeholder="Contoh: Ahmad Subagja" class="w-full bg-slate-950/50 border border-slate-700/80 text-slate-100 placeholder-slate-400 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition backdrop-blur-sm">
+              </div>
+
+              <div>
+                <label for="reporterPhone" class="block text-xs font-semibold text-slate-200 mb-2">Nomor WhatsApp / HP *</label>
+                <input type="tel" id="reporterPhone" required placeholder="Contoh: 081234567890" class="w-full bg-slate-950/50 border border-slate-700/80 text-slate-100 placeholder-slate-400 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition backdrop-blur-sm">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-200 mb-2">Koordinat Lokasi Kejadian *</label>
+              <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="locationCoords" required readonly placeholder="Klik tombol di samping untuk mengambil GPS..." class="flex-1 bg-slate-950/50 border border-slate-700/80 text-emerald-400 font-mono text-sm rounded-xl p-3 focus:outline-none cursor-not-allowed backdrop-blur-sm">
+                <button type="button" id="getGpsBtn" class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-3 rounded-xl transition duration-200 shadow-md active:scale-95 text-sm shrink-0">
+                  <i data-lucide="crosshair" class="w-4 h-4"></i>
+                  <span>Ambil GPS Saya</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-300 mt-1.5 flex items-center gap-1">
+                <i data-lucide="info" class="w-3 h-3 text-slate-400"></i> Pastikan Anda mengizinkan akses lokasi (GPS) pada browser Anda.
+              </p>
+            </div>
+
+            <div>
+              <label for="severity" class="block text-xs font-semibold text-slate-200 mb-2">Tingkat Keparahan Api *</label>
+              <select id="severity" required class="custom-select-box w-full bg-slate-950/60 border border-slate-700/80 text-slate-100 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition cursor-pointer backdrop-blur-sm">
+                <option value="rendah" class="bg-slate-900 text-slate-200">Sedang - Asap Tebal Tanpa Kobaran Api Besar</option>
+                <option value="sedang" selected class="bg-slate-900 text-slate-200">Tinggi - Api Meluas di Lahan Gambut/Semak</option>
+                <option value="darurat" class="bg-slate-900 text-slate-200">DARURAT - Api Dekat Pemukiman / Habitat Satwa</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="description" class="block text-xs font-semibold text-slate-200 mb-2">Deskripsi Singkat *</label>
+              <textarea id="description" rows="3" required placeholder="Jelaskan kondisi patokan lokasi..." class="w-full bg-slate-950/50 border border-slate-700/80 text-slate-100 placeholder-slate-400 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition backdrop-blur-sm"></textarea>
+            </div>
+
+            <div class="space-y-2 mb-5">
+              <label class="block text-xs font-semibold text-slate-300">Unggah Foto Bukti Kejadian (Opsional)</label>
+              <div class="relative border-2 border-dashed border-slate-700/80 hover:border-emerald-500/80 rounded-2xl p-4 text-center transition bg-slate-950/50 group cursor-pointer">
+                <input type="file" id="reportPhotoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                
+                <div id="uploadPlaceholder" class="space-y-2 pointer-events-none">
+                  <div class="w-10 h-10 bg-slate-900 border border-slate-700 rounded-xl flex items-center justify-center mx-auto text-slate-400 group-hover:text-emerald-400 transition">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                  </div>
+                  <p class="text-xs text-slate-300 font-medium">Klik atau geser foto ke sini</p>
+                  <p class="text-[10px] text-slate-500">Format JPG, PNG (Maks. 5 MB)</p>
+                </div>
+
+                <div id="imagePreviewContainer" class="hidden relative z-10 flex flex-col items-center gap-2">
+                  <img id="imagePreview" src="#" alt="Preview Kebakaran" class="max-h-40 rounded-xl border border-slate-700 object-cover shadow-lg">
+                  <div class="flex items-center gap-2">
+                    <span id="fileName" class="text-xs font-semibold text-emerald-400 truncate max-w-[200px]"></span>
+                    <button type="button" id="removePhotoBtn" class="p-1.5 bg-red-950/80 border border-red-800 text-red-400 hover:text-white rounded-lg transition text-[10px] flex items-center gap-1 relative z-30">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Foto
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-red-950 active:scale-95 text-sm">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Kirim Laporan Bencana Sekarang</span>
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- SECTION 4: DASHBOARD ANALITIK DATA KARHUTLA -->
+    <section id="dashboard" class="relative py-12 lg:py-20 px-4 border-t border-slate-800/80 overflow-hidden">
+      
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2000&q=80" 
+          alt="Lanskap Kalsel" 
+          class="w-full h-full object-cover object-center opacity-65"
+        >
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-950/90 z-1"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto relative z-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/80 border border-teal-800/80 text-teal-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
+              <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+              <span>Data-Driven Decision Support System</span>
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+              Dashboard Analitik Karhutla & ISPU
+            </h2>
+            <p class="text-slate-200 text-sm mt-2 max-w-2xl leading-relaxed">
+              Visualisasi tren titik api historis dan statistik sebaran laporan bencana berbasis data terintegrasi.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          
+          <div class="bg-slate-900/50 rounded-2xl border border-slate-700/60 p-5 sm:p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between h-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-700/60 gap-3">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                Tren Titik Api (Hotspot)
+              </h3>
+              
+              <div class="flex items-center gap-2">
+                <label for="calendarFilter1" class="text-xs text-slate-200 font-medium">Bulan:</label>
+                <input 
+                  type="month" 
+                  id="calendarFilter1" 
+                  value="2026-09"
+                  class="bg-slate-950/80 border border-slate-700/80 text-emerald-400 text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer shadow-inner"
+                >
+              </div>
+            </div>
+
+            <div class="relative w-full h-[280px]">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/50 rounded-2xl border border-slate-700/60 p-5 sm:p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between h-full relative overflow-hidden">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-700/60 gap-3">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-amber-400"></i>
+                Sebaran Laporan Wilayah
+              </h3>
+              
+              <div class="flex items-center gap-2 z-20">
+                <label for="calendarFilter2" class="text-xs text-slate-200 font-medium">Bulan:</label>
+                <input 
+                  type="month" 
+                  id="calendarFilter2" 
+                  value="2026-09"
+                  class="bg-slate-950/90 border border-slate-700 text-amber-400 text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/50 backdrop-blur-sm cursor-pointer shadow-inner"
+                >
+              </div>
+            </div>
+
+            <div class="relative w-full h-[250px] flex items-center justify-center z-10 mb-6">
+              <canvas id="regionChart"></canvas>
+            </div>
+
+            <!-- Animasi Pemadam Kebakaran Running SVG dari style.css -->
+            <div class="firefighter-runner-container">
+              <div class="firefighter-character">
+                <div class="water-spray"></div>
+                <svg class="firefighter-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="28" cy="18" r="10" fill="#ef4444"/>
+                  <path d="M16 18C16 12 21 10 28 10C35 10 40 12 40 18H16Z" fill="#f59e0b"/>
+                  <path d="M18 28C18 24 22 23 28 23C34 23 38 24 38 28V42H18V28Z" fill="#dc2626"/>
+                  <path d="M10 38Q20 38 34 33" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M34 33L48 30" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 4: HALAMAN INTERAKTIF RELAWAN & VOLUNTEER HUB -->
+    <section id="relawan" class="relative py-16 lg:py-24 px-4 lg:px-8 border-t border-slate-800/80 overflow-hidden bg-slate-950">
+      
+      <!-- BACKGROUND NUANSA HUTAN KALIMANTAN -->
+      <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <img 
+          src="images/pemadamkarhutla.jpg" 
+          alt="Relawan" 
+          class="w-full h-full object-cover object-center opacity-40 scale-105"
+        >
+        <!-- Overlay Gradient Transparan -->
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/60 to-slate-950/90 z-1"></div>
+        <div class="absolute top-1/2 left-10 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto w-full relative z-10 space-y-8">
+        
+        <!-- Header Seksi Relawan -->
+        <div class="text-center space-y-3 max-w-3xl mx-auto">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/90 border border-teal-400/60 text-teal-300 text-xs font-semibold backdrop-blur-md shadow-[0_0_20px_rgba(20,184,166,0.3)]">
+            <i data-lucide="users" class="w-4 h-4 text-teal-400"></i>
+            <span>Relawan JagaUdara Kalimantan</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Pilih Aksi Nyata & <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-300 to-amber-400">Bergabunglah Hari Ini</span>
+          </h2>
+          <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            Klik kartu program di sebelah kiri untuk melihat syarat, tugas, serta manfaat aksi relawan secara langsung.
+          </p>
+        </div>
+
+        <!-- GRID INTERAKTIF 2 KOLOM (KIRI: HOLOGRAM FEED, KANAN: DETAIL TYPEWRITER) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          
+          <!-- KOLOM KIRI: HOLOGRAM FEED CAROUSEL PROGRAM RELAWAN (5 KOLOM) -->
+          <div class="lg:col-span-5 bg-slate-950/60 border border-teal-500/30 rounded-3xl p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(20,184,166,0.15)] flex flex-col justify-between space-y-4">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-teal-950 text-teal-300 border border-teal-500/50 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span> Program Aktif
+              </span>
+              <span class="text-xs font-semibold text-slate-400">Pilih Aksi Relawan</span>
+            </div>
+
+            <!-- List Hologram Cards -->
+            <div class="space-y-3" id="volHoloContainer">
+              
+              <!-- Card 1: Pemadam Laporan Gambut -->
+              <div onclick="selectVolProgram(0)" id="volCard0" class="vol-holo-card cursor-pointer p-3.5 rounded-2xl bg-slate-900/90 border-2 border-teal-400 text-white transition-all duration-300 shadow-[0_0_20px_rgba(45,212,191,0.25)] flex items-center gap-3.5">
+                <div class="p-2.5 bg-teal-950 border border-teal-500/50 rounded-xl text-teal-400 shrink-0">
+                  <i data-lucide="flame" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-[9px] font-bold text-teal-400 uppercase tracking-wider block">Tim Lapangan</span>
+                  <h4 class="text-xs font-bold text-white truncate">Pemadaman Gambut & Posko Siaga</h4>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Manggala Agni & BPBD Kalsel</p>
+                </div>
+              </div>
+
+              <!-- Card 2: Pembagian Masker & Edukasi -->
+              <div onclick="selectVolProgram(1)" id="volCard1" class="vol-holo-card cursor-pointer p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/50 text-slate-300 transition-all duration-300 flex items-center gap-3.5">
+                <div class="p-2.5 bg-amber-950 border border-amber-500/50 rounded-xl text-amber-400 shrink-0">
+                  <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">Kesehatan Warga</span>
+                  <h4 class="text-xs font-bold text-white truncate">Pembagian Masker N95 & Edukasi ISPA</h4>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Posko Kesehatan & Komunitas</p>
+                </div>
+              </div>
+
+              <!-- Card 3: Reboisasi Pohon Ulin -->
+              <div onclick="selectVolProgram(2)" id="volCard2" class="vol-holo-card cursor-pointer p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/50 text-slate-300 transition-all duration-300 flex items-center gap-3.5">
+                <div class="p-2.5 bg-emerald-950 border border-emerald-500/50 rounded-xl text-emerald-400 shrink-0">
+                  <i data-lucide="trees" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block">Konservasi Alam</span>
+                  <h4 class="text-xs font-bold text-white truncate">Penanaman 1.000 Pohon Ulin Gambut</h4>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Komunitas Hijau Kalimantan</p>
+                </div>
+              </div>
+
+            </div>
+
+            <p class="text-center text-[10px] text-slate-400 font-medium pt-2">Klik salah satu kartu untuk memperbarui instruksi di sebelah kanan</p>
+          </div>
+
+          <!-- KOLOM KANAN: DETAIL TYPEWRITER INTERAKTIF TRANSPARAN (7 KOLOM) -->
+          <div class="lg:col-span-7 bg-slate-950/60 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl flex flex-col justify-between space-y-6">
+            
+            <div class="space-y-4">
+              <!-- Tag Program -->
+              <div class="flex items-center gap-2">
+                <span id="volDetailTag" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-teal-950 border border-teal-500/50 text-teal-300">
+                  TIM LAPANGAN BPBD & MANGGALA AGNI
+                </span>
+              </div>
+
+              <!-- Judul Program dengan Efek Typewriter -->
+              <h3 id="volDetailTitle" class="text-xl sm:text-2xl font-black text-white leading-snug typing-cursor">
+                Pemadaman Gambut & Posko Siaga Karhutla
+              </h3>
+
+              <!-- Deskripsi & Syarat dengan Efek Typewriter -->
+              <div class="space-y-3 pt-2 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                <p id="volDetailDesc" class="font-medium text-slate-300">
+                  Bergabunglah langsung bersama tim gabungan dalam pemadaman titik api di kawasan lahan gambut serta membantu logistik posko siaga bencana.
+                </p>
+                
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md space-y-2">
+                  <h5 class="font-bold text-amber-400 text-xs flex items-center gap-1.5">
+                    <i data-lucide="check-square" class="w-4 h-4"></i> Syarat & Kualifikasi Relawan:
+                  </h5>
+                  <p id="volDetailReq" class="text-slate-300 text-xs leading-normal">
+                    • Usia minimal 18 tahun & sehat jasmani.<br>
+                    • Bersedia ditempatkan di posko lapangan Kalimantan.<br>
+                    • Mendapatkan perlengkapan safety (APD), konsumsi, serta Sertifikat Digital.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tombol Aksi Pendaftaran -->
+            <div class="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span class="block text-[10px] text-slate-400 font-semibold uppercase">Status Program:</span>
+                <span id="volDetailStatus" class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Pendaftaran Dibuka (Sisa 15 Kuota)
+                </span>
+              </div>
+
+              <!-- TOMBOL MEMBUKA FORM DAFTAR UNTUK JURI -->
+              <button type="button" onclick="openVolunteerModal()" class="px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm rounded-xl transition duration-200 shadow-xl shadow-emerald-950/60 flex items-center gap-2 active:scale-95">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Daftar Sebagai Relawan</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  <!-- ========================================================================
+       MODAL FORM PENDAFTARAN RELAWAN TRANSPARAN (UNTUK UJI JURI)
+       ======================================================================== -->
+  <div id="volunteerRegisterModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300">
+    
+    <!-- CONTAINER GLASSMORPHISM TRANSPARAN -->
+    <div class="relative w-full max-w-lg bg-slate-950/90 border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-xl overflow-hidden">
+      
+      <!-- Tombol Close Modal -->
+      <button type="button" onclick="closeVolunteerModal()" class="absolute top-5 right-5 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Header Modal -->
+      <div class="flex items-center gap-3 mb-5">
+        <div class="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl text-emerald-400">
+          <i data-lucide="user-plus" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-black text-white">Form Pendaftaran Relawan</h3>
+          <p class="text-xs text-slate-400">Silakan isi data untuk dicetak pada Profil & Sertifikat Digital</p>
+        </div>
+      </div>
+
+      <!-- Form Pendaftaran -->
+      <form id="volunteerForm" class="space-y-4">
+        
+        <!-- Nama Lengkap (Diisi Juri) -->
+        <div>
+          <label for="volName" class="block text-xs font-bold text-slate-300 mb-1.5">Nama Lengkap (Sesuai Sertifikat) *</label>
+          <input type="text" id="volName" required placeholder="Contoh: Mikola / Dewan Juri Invention 2026" class="w-full bg-slate-900/90 border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-500 transition shadow-inner">
+        </div>
+
+        <!-- Email & Nomor WhatsApp -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="volEmail" class="block text-xs font-bold text-slate-300 mb-1.5">Email *</label>
+            <input type="email" id="volEmail" required placeholder="nama@email.com" class="w-full bg-slate-900/90 border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-500 transition shadow-inner">
+          </div>
+          <div>
+            <label for="volPhone" class="block text-xs font-bold text-slate-300 mb-1.5">No. WhatsApp / HP *</label>
+            <input type="tel" id="volPhone" required placeholder="081234567890" class="w-full bg-slate-900/90 border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-500 transition shadow-inner">
+          </div>
+        </div>
+
+        <!-- Wilayah Domisili -->
+        <div>
+          <label for="volRegion" class="block text-xs font-bold text-slate-300 mb-1.5">Wilayah Domisili *</label>
+          <select id="volRegion" required class="custom-select-box w-full bg-slate-900/90 border border-slate-800 text-white text-xs font-semibold rounded-xl p-3 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-inner">
+            <option value="Kalsel" selected>Kalimantan Selatan (Kalsel)</option>
+            <option value="Kalteng">Kalimantan Tengah (Kalteng)</option>
+            <option value="Kalbar">Kalimantan Barat (Kalbar)</option>
+            <option value="Kaltim">Kalimantan Timur (Kaltim)</option>
+            <option value="Kaltara">Kalimantan Utara (Kaltara)</option>
+          </select>
+        </div>
+
+        <!-- Minat Bidang Aksi Relawan -->
+        <div>
+          <label for="volRole" class="block text-xs font-bold text-slate-300 mb-1.5">Fokus Minat Aksi *</label>
+          <select id="volRole" required class="custom-select-box w-full bg-slate-900/90 border border-slate-800 text-white text-xs font-semibold rounded-xl p-3 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-inner">
+            <option value="Relawan Lapangan BPBD & Manggala Agni">Pemadaman Lahan & Tim Lapangan</option>
+            <option value="Relawan Edukasi & Pembagian Masker">Edukasi Warga & Pembagian Masker N95</option>
+            <option value="Relawan Reboisasi & Lingkungan">Aksi Reboisasi & Konservasi Satwa</option>
+            <option value="Pengembang & Tim Digital GIS">Tim GIS, Data & Sistem Platform</option>
+          </select>
+        </div>
+
+        <!-- Tombol Submit Pendaftaran -->
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm rounded-xl transition duration-200 shadow-xl shadow-emerald-950/60 flex items-center justify-center gap-2 mt-2 active:scale-95">
+          <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          <span>Daftar Sekarang & Lihat Profil Saya</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+    <!-- SECTION KALKULATOR RISIKO ISPA & EDUKASI KESEHATAN -->
+    <section id="kalkulator" class="relative py-12 lg:py-20 px-4 border-t border-slate-800/80 overflow-hidden">
+      
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=2000&q=80" 
+          alt="Lahan Gambut Kalimantan" 
+          class="w-full h-full object-cover object-center opacity-55"
+        >
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-slate-950/90 z-1"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto relative z-10">
+        
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
+            <span>Pencegahan Dini & Proteksi Mandiri</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+            Edukasi Kesehatan & Kalkulator Risiko ISPA
+          </h2>
+          <p class="text-slate-200 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
+            Ukur potensi risiko paparan asap berdasarkan kondisi fisik Anda, serta pelajari 30 panduan proteksi mandiri interaktif (klik pada kartu untuk berputar).
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          <div class="lg:col-span-6 bg-slate-900/50 rounded-2xl border border-slate-700/60 p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between h-full">
+            <div>
+              <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-700/60">
+                <div class="p-2.5 bg-emerald-950/80 rounded-xl border border-emerald-800/80 text-emerald-400">
+                  <i data-lucide="calculator" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-white">Kalkulator Paparan Asap</h3>
+                  <p class="text-xs text-slate-300">Estimasi tingkat risiko paparan asap harian.</p>
+                </div>
+              </div>
+
+              <div class="space-y-4 mb-4">
+                <div>
+                  <label for="calcAge" class="block text-xs font-semibold text-slate-200 mb-2">Kategori Usia Pelapor / Keluarga:</label>
+                  <select id="calcAge" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
+                    <option value="balita">Anak-anak / Balita (0 - 11 Tahun)</option>
+                    <option value="remaja">Remaja (12 - 17 Tahun)</option>
+                    <option value="dewasa" selected>Dewasa (18 - 59 Tahun)</option>
+                    <option value="lansia">Lansia (≥ 60 Tahun)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="calcDisease" class="block text-xs font-semibold text-slate-200 mb-2">Riwayat Komorbid / Penyakit Pernapasan:</label>
+                  <select id="calcDisease" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
+                    <option value="none" selected>Tidak Ada / Sehat</option>
+                    <option value="asma">Asma / Bronkitis Kronis</option>
+                    <option value="ispa">Pernah Terkena ISPA Berat</option>
+                    <option value="jantung">Riwayat Penyakit Jantung / PPOK</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="calcDuration" class="block text-xs font-semibold text-slate-200 mb-2">Durasi Aktivitas Luar Ruangan (Jam/Hari):</label>
+                  <input type="number" id="calcDuration" value="2" min="1" max="24" class="custom-number-input w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm">
+                </div>
+
+                <button type="button" id="btnCalculateRisk" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3.5 rounded-xl transition shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 active:scale-95 mt-2">
+                  <i data-lucide="activity" class="w-4 h-4"></i>
+                  <span>Hitung Risiko Kesehatan</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="riskResultBox" class="p-4 rounded-xl bg-slate-950/80 border border-slate-700/80 flex items-start gap-3 backdrop-blur-sm">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+              <div>
+                <p class="text-xs font-bold text-amber-300 mb-0.5" id="riskTitle">Status Risiko: SEDANG (MODERATE)</p>
+                <p class="text-xs text-slate-200 leading-relaxed" id="riskDesc">Batasi olahraga berat di luar ruangan dan persiapkan masker N95 saat keluar rumah.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 flex flex-col justify-between h-full space-y-2.5">
+            
+            <div class="flex items-center justify-between pb-2 border-b border-slate-700/60">
+              <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                <span id="eduCounterText">Edukasi 1 dari 30</span>
+              </span>
+              <span class="text-[11px] text-slate-400 italic">💡 Klik kartu untuk memutar tips</span>
+            </div>
+
+            <div class="flex flex-col justify-between gap-3 flex-1">
+              
+              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="0">
+                <div class="flip-card-inner relative w-full h-full">
+                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
+                    <div class="p-3 bg-amber-950/60 border border-amber-800/80 text-amber-400 rounded-xl shrink-0">
+                      <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront0">Gunakan Masker Standar N95 / KN95</h4>
+                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront0">Masker kain biasa tidak mampu menyaring partikel mikro berbahaya (PM2.5) dari asap Karhutla.</p>
+                    </div>
+                  </div>
+
+                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
+                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                      <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack0">Tips Berikutnya</h4>
+                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack0">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="1">
+                <div class="flip-card-inner relative w-full h-full">
+                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
+                    <div class="p-3 bg-emerald-950/60 border border-emerald-800/80 text-emerald-400 rounded-xl shrink-0">
+                      <i data-lucide="air-vent" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront1">Tutup Ventilasi & Gunakan Air Purifier</h4>
+                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront1">Saat indeks ISPU di atas 150, tutup rapat jendela dan gunakan pemurni udara indoor.</p>
+                    </div>
+                  </div>
+
+                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
+                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                      <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack1">Tips Berikutnya</h4>
+                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack1">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="2">
+                <div class="flip-card-inner relative w-full h-full">
+                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
+                    <div class="p-3 bg-cyan-950/60 border border-cyan-800/80 text-cyan-400 rounded-xl shrink-0">
+                      <i data-lucide="droplet" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront2">Perbanyak Konsumsi Air Putih & Vitamin C</h4>
+                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront2">Menjaga tenggorokan tetap basah membantu melarutkan partikel debu halus di saluran pernapasan.</p>
+                    </div>
+                  </div>
+
+                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
+                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                      <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack2">Tips Berikutnya</h4>
+                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack2">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION TANYA AI KARHUTLA -->
+    <section id="edukasi-ai" class="relative min-h-screen py-16 px-4 overflow-hidden bg-slate-950 flex items-center">
+      
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://picsum.photos/id/1015/1920/1080" 
+          alt="Lanskap Hutan Tropis" 
+          class="w-full h-full object-cover object-center opacity-65"
+        >
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/40 to-slate-950/80"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto w-full relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+        
+        <div class="lg:col-span-5">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/80 border border-blue-800/80 text-blue-400 text-xs font-semibold mb-4 backdrop-blur-md shadow-md">
+            <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+            <span>JagaUdara AI Assistant</span>
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-5">
+            Tanya AI Seputar Mitigasi Karhutla & Kesehatan Udara
+          </h2>
+          <p class="text-slate-200 text-sm sm:text-base leading-relaxed mb-8">
+            Punya pertanyaan tentang cara penanganan ISPA, pertolongan pertama paparan asap, atau cara melaporkan titik api? Tanyakan langsung pada asisten AI pintar kami yang siap merespons secara real-time.
+          </p>
+
+          <div class="space-y-3">
+            <p class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pertanyaan Populer:</p>
+            <div class="flex flex-wrap gap-2.5">
+              <button type="button" class="ai-prompt-btn text-xs bg-slate-900/80 hover:bg-blue-950 border border-slate-700/80 hover:border-blue-500/50 text-slate-200 hover:text-blue-300 px-3.5 py-2 rounded-xl transition backdrop-blur-md">
+                Apa masker paling efektif untuk asap?
+              </button>
+              <button type="button" class="ai-prompt-btn text-xs bg-slate-900/80 hover:bg-blue-950 border border-slate-700/80 hover:border-blue-500/50 text-slate-200 hover:text-blue-300 px-3.5 py-2 rounded-xl transition backdrop-blur-md">
+                Bagaimana gejala awal ISPA pada balita?
+              </button>
+              <button type="button" class="ai-prompt-btn text-xs bg-slate-900/80 hover:bg-blue-950 border border-slate-700/80 hover:border-blue-500/50 text-slate-200 hover:text-blue-300 px-3.5 py-2 rounded-xl transition backdrop-blur-md">
+                Kontak darurat BPBD Kalsel?
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900/50 rounded-2xl border border-slate-700/70 p-6 shadow-2xl backdrop-blur-md flex flex-col h-[520px]">
+          
+          <div class="flex items-center justify-between pb-4 border-b border-slate-700/60 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                <i data-lucide="bot" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white">JagaUdara AI</h3>
+                <p class="text-xs text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online & Siap Membantu
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="aiChatBox" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin">
+            <div class="flex gap-3 items-start">
+              <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white shadow-md">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+              </div>
+              <div class="bg-slate-800/80 p-4 rounded-2xl rounded-tl-none border border-slate-700/50 text-xs sm:text-sm text-slate-200 leading-relaxed max-w-[85%] backdrop-blur-sm">
+                Halo! Saya Asisten AI JagaUdara. Silakan tanyakan apa saja terkait penanganan dampak asap Karhutla, ISPU, atau tips proteksi kesehatan keluarga Anda.
+              </div>
+            </div>
+          </div>
+
+          <form id="aiChatForm" class="relative mt-auto">
+            <input 
+              type="text" 
+              id="aiInputMessage" 
+              placeholder="Ketik pertanyaan Anda tentang Karhutla di sini..." 
+              required
+              class="w-full bg-slate-950/80 border border-slate-700/80 text-slate-200 text-xs sm:text-sm rounded-xl py-4 pl-4 pr-12 focus:outline-none focus:border-blue-500/80 transition backdrop-blur-sm"
+            >
+            <button 
+              type="submit" 
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition active:scale-95 shadow-md"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION DONASI & AKSI SOSIAL -->
+    <section id="donasi" class="relative py-12 lg:py-20 px-4 overflow-hidden">
+      
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=2000&q=80" 
+          alt="Reboisasi Kalimantan" 
+          class="w-full h-full object-cover object-center opacity-50"
+        >
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-950/60 to-slate-950/90 z-1"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto relative z-10">
+        
+        <div class="text-center mb-10">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-950/80 border border-pink-800/80 text-pink-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
+            <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
+            <span>Solidaritas Kemanusiaan & Reboisasi Alam</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+            Salurkan Bantuan, Pulihkan Kalimantan
+          </h2>
+          <p class="text-slate-200 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
+            Dukungan Anda disalurkan secara transparan untuk tim relawan di garis depan, perlengkapan oksigen gratis warga, serta penanaman kembali lahan gambut yang terbakar.
+          </p>
+        </div>
+
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <div class="bg-slate-900/60 rounded-2xl border border-slate-700/80 p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between hover:border-pink-500/50 transition">
+            <div>
+              <div class="w-12 h-12 bg-pink-950/80 rounded-xl border border-pink-800/80 flex items-center justify-center text-pink-400 mb-4 shadow-inner">
+                <i data-lucide="stethoscope" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Pasokan Oksigen & Medis Warga ISPA</h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-6">
+                Penyediaan masker N95 gratis, tabung oksigen portabel, dan suplemen bagi kelompok balita serta lansia terdampak kabut asap tebal.
+              </p>
+              
+              <div class="mb-2 flex justify-between text-xs font-semibold">
+                <span class="text-pink-400">Terkumpul: Rp 18.500.000</span>
+                <span class="text-slate-400">Target: Rp 50 Juta</span>
+              </div>
+              <div class="w-full bg-slate-950/80 rounded-full h-2.5 mb-6 overflow-hidden border border-slate-800">
+                <div class="bg-gradient-to-r from-pink-500 to-rose-400 h-2.5 rounded-full" style="width: 37%"></div>
+              </div>
+            </div>
+
+            <button type="button" onclick="openDonateModal('Bantuan Oksigen & Medis Warga')" class="w-full py-3.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition shadow-lg shadow-pink-950/50 flex items-center justify-center gap-2 active:scale-95">
+              <i data-lucide="heart" class="w-4 h-4"></i>
+              <span>Donasi Program Medis</span>
+            </button>
+          </div>
+
+          <div class="bg-slate-900/60 rounded-2xl border border-slate-700/80 p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between hover:border-emerald-500/50 transition">
+            <div>
+              <div class="w-12 h-12 bg-emerald-950/80 rounded-xl border border-emerald-800/80 flex items-center justify-center text-emerald-400 mb-4 shadow-inner">
+                <i data-lucide="tree-deciduous" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Adopsi Bibit Pohon Endemik Kalimantan</h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-6">
+                Bantu hijaukan kembali lahan gambut bekas terbakar. Setiap Rp 25.000 yang Anda donasikan setara dengan 1 bibit pohon Ulin/Meranti yang ditanam relawan.
+              </p>
+              
+              <div class="mb-2 flex justify-between text-xs font-semibold">
+                <span class="text-emerald-400">Terkumpul: 820 Bibit</span>
+                <span class="text-slate-400">Target: 2.500 Bibit</span>
+              </div>
+              <div class="w-full bg-slate-950/80 rounded-full h-2.5 mb-6 overflow-hidden border border-slate-800">
+                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full" style="width: 33%"></div>
+              </div>
+            </div>
+
+            <button type="button" onclick="openDonateModal('Adopsi Bibit Pohon Endemik')" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 active:scale-95">
+              <i data-lucide="sprout" class="w-4 h-4"></i>
+              <span>Adopsi Bibit Pohon</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION POSKO SIAGA & FASILITAS KESEHATAN (BACKGROUND ALAM FIX TAMPIL LENGKAP) -->
+    <section id="posko" class="relative py-16 lg:py-24 px-4 lg:px-8 border-t border-slate-800/80 bg-posko-alam min-h-screen flex flex-col justify-center">
+      
+      <div class="max-w-7xl mx-auto w-full relative z-10 space-y-10 my-auto">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-950/90 border border-amber-500/60 text-amber-300 text-xs font-semibold mb-3 backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+              <i data-lucide="hospital" class="w-4 h-4 text-amber-400"></i>
+              <span>Posko Evakuasi & Penanganan ISPA Terpadu</span>
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-lg">Direktori Posko Siaga & Faskes</h2>
+            <p class="text-sm text-slate-100 mt-2 max-w-2xl leading-relaxed drop-shadow-md">
+              Lokasi posko evakuasi darurat, rumah oksigen gratis, puskesmas penanganan ISPA, dan titik distribusi masker standar medis terdekat di wilayah Kalimantan.
+            </p>
+          </div>
+
+          <!-- Input Pencarian -->
+          <div class="relative w-full md:w-80">
+            <input type="text" id="searchPoskoInput" placeholder="Cari nama posko, RS, atau wilayah..." class="w-full bg-slate-950/80 border border-slate-700 hover:border-emerald-500/80 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-400 backdrop-blur-xl shadow-2xl transition">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+          </div>
+        </div>
+
+        <!-- GRID 6 KARTU GLASSMORPHISM WIRING DENGAN NEON HIGHLIGHT -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- Card 1: ORANYE -->
+          <div class="bg-slate-950/70 border-2 border-amber-500/50 hover:border-amber-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-amber-950/90 border border-amber-500/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Posko Utama</span>
+                <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-emerald-500/40"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Buka 24 Jam</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-amber-300 transition">Posko Induk BPBD Banjarbaru</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+                <span>Jl. Trikora No. 12, Cempaka, Banjarbaru (Kalsel)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-amber-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Stok Masker N95:</span>
+                <span class="font-bold text-emerald-400 text-sm">1.200+ Unit</span>
+              </div>
+              <a href="tel:08115000911" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-950/80 active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>Call Posko (0811-5000-911)</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 2: HIJAU -->
+          <div class="bg-slate-950/70 border-2 border-emerald-500/50 hover:border-emerald-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Rumah Oksigen</span>
+                <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-emerald-500/40"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Buka 24 Jam</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-emerald-300 transition">RSUD dr. Doris Sylvanus</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                <span>Jl. Diponegoro No. 2, Pahandut, Palangkaraya (Kalteng)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-emerald-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Bed IGD ISPA:</span>
+                <span class="font-bold text-amber-400 text-sm">Tersisa 4 Bed</span>
+              </div>
+              <a href="tel:081299881122" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/80 active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>IGD RSUD (0812-9988-1122)</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: TEAL -->
+          <div class="bg-slate-950/70 border-2 border-teal-500/50 hover:border-teal-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(20,184,166,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-teal-950/90 border border-teal-500/60 text-teal-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Pembagian Masker</span>
+                <span class="text-[10px] text-teal-300 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-teal-500/40"><span class="w-2 h-2 rounded-full bg-teal-400"></span> 08:00 - 20:00 WITA</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-teal-300 transition">Posko Relawan PMI Pontianak</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-teal-400 shrink-0 mt-0.5"></i>
+                <span>Jl. Ahmad Yani No. 45, Pontianak Selatan (Kalbar)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-teal-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Pemeriksaan Paru:</span>
+                <span class="font-bold text-emerald-400 text-sm">Gratis (Dokter Umum)</span>
+              </div>
+              <a href="tel:0561734000" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-500/60 font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>PMI Pontianak (0561-734000)</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 4: BIRU -->
+          <div class="bg-slate-950/70 border-2 border-sky-500/50 hover:border-sky-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-sky-950/90 border border-sky-500/60 text-sky-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Puskesmas Darurat</span>
+                <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-emerald-500/40"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Buka 24 Jam</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-sky-300 transition">Puskesmas Liang Anggang</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
+                <span>Jl. Ahmad Yani Km. 21, Landasan Ulin, Banjarbaru (Kalsel)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-sky-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Nebulizer / Inhaler:</span>
+                <span class="font-bold text-emerald-400 text-sm">Tersedia 8 Unit</span>
+              </div>
+              <a href="tel:081344556677" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-sky-300 border border-sky-500/60 font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>Puskesmas (0813-4455-6677)</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 5: MERAH -->
+          <div class="bg-slate-950/70 border-2 border-red-500/50 hover:border-red-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-red-950/90 border border-red-500/60 text-red-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Posko Pemadam Karhutla</span>
+                <span class="text-[10px] text-red-400 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-red-500/40"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Siaga Aksi</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-red-300 transition">Daops Manggala Agni Tanah Laut</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i>
+                <span>Jl. Soepirman No. 8, Pelaihari, Tanah Laut (Kalsel)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-red-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Tim Mobilisasi:</span>
+                <span class="font-bold text-amber-400 text-sm">4 Tim Siaga</span>
+              </div>
+              <a href="tel:051221113" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-950/80 active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>Manggala Agni (0512-21113)</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 6: UNGU -->
+          <div class="bg-slate-950/70 border-2 border-purple-500/50 hover:border-purple-400 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] flex flex-col justify-between hover:-translate-y-1.5 group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-lg bg-purple-950/90 border border-purple-500/60 text-purple-300 text-[10px] font-bold uppercase tracking-wider shadow-md">Evakuasi Balita & Lansia</span>
+                <span class="text-[10px] text-purple-300 font-bold flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-purple-500/40"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Khusus Rentan</span>
+              </div>
+              <h3 class="text-xl font-bold text-white mt-4 group-hover:text-purple-300 transition">Posko Aman Asap Dinsos Samarinda</h3>
+              <p class="text-xs text-slate-200 mt-2 flex items-start gap-2 leading-relaxed">
+                <i data-lucide="map-pin" class="w-4 h-4 text-purple-400 shrink-0 mt-0.5"></i>
+                <span>Jl. S. Parman No. 10, Samarinda Ulu (Kaltim)</span>
+              </p>
+            </div>
+            <div class="pt-4 border-t border-purple-500/30 space-y-3 mt-5">
+              <div class="flex justify-between text-xs text-slate-200 font-medium">
+                <span>Kapasitas Ruang AC:</span>
+                <span class="font-bold text-emerald-400 text-sm">Tersisa 25 Bed</span>
+              </div>
+              <a href="tel:0541741000" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-purple-300 border border-purple-500/60 font-bold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                <i data-lucide="phone-call" class="w-4 h-4"></i>
+                <span>Dinsos Samarinda (0541-741000)</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  <!-- FOOTER MODERN COMMAND CENTER -->
+  <footer class="relative bg-slate-950 border-t border-slate-800/80 pt-16 pb-12 px-4 lg:px-8 overflow-hidden">
+    
+    <!-- Ambient Glow & Pattern Halus (Tanpa Foto agar Bersih & Ringan) -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-[140px] pointer-events-none"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto relative z-10 space-y-12">
+      
+      <!-- GRID UTAMA 3 KOLOM -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+        
+        <!-- KOLOM 1: BRANDING & STATUS SISTEM (4 KOLOM) -->
+        <div class="md:col-span-5 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-teal-950 border border-teal-400/50 flex items-center justify-center text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.3)]">
+              <i data-lucide="leaf" class="w-5 h-5"></i>
+            </div>
+            <span class="text-2xl font-black tracking-tight text-white">Jaga<span class="text-emerald-400">Udara</span></span>
+          </div>
+
+          <p class="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm">
+            Platform digital integratif pemantauan Karhutla, kualitas udara (ISPU), sistem edukasi pencegahan ISPA, dan saluran aksi sosial terpadu Kalimantan.
+          </p>
+
+          <!-- Badges Status Realtime Live -->
+          <div class="pt-2 space-y-1.5">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 text-emerald-300 text-xs font-semibold shadow-inner">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Sistem Beroperasi Real-time 24/7</span>
+            </div>
+            <p class="text-[10px] text-slate-500 font-mono pl-1">
+              • Latensi Server: 14ms | NOAA/MODIS Active
+            </p>
+          </div>
+        </div>
+
+        <!-- KOLOM 2: NAVIGASI PLATFORM (3 KOLOM) -->
+        <div class="md:col-span-3 space-y-3">
+          <h4 class="text-xs font-black uppercase tracking-wider text-slate-200 border-b border-slate-800 pb-2">
+            Navigasi Platform
+          </h4>
+          <ul class="space-y-2 text-xs font-medium text-slate-400">
+            <li>
+              <a href="#beranda" class="hover:text-teal-300 transition flex items-center gap-1.5 group">
+                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-600 group-hover:text-teal-400 transition"></i> Beranda & ISPU Live
+              </a>
+            </li>
+            <li>
+              <a href="#peta" class="hover:text-teal-300 transition flex items-center gap-1.5 group">
+                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-600 group-hover:text-teal-400 transition"></i> Peta Hotspot (GIS)
+              </a>
+            </li>
+            <li>
+              <a href="#lapor" class="hover:text-teal-300 transition flex items-center gap-1.5 group">
+                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-600 group-hover:text-teal-400 transition"></i> Laporkan Kejadian Api
+              </a>
+            </li>
+            <li>
+              <a href="#relawan" class="hover:text-teal-300 transition flex items-center gap-1.5 group text-teal-300 font-semibold">
+                <i data-lucide="chevron-right" class="w-3 h-3 text-teal-400"></i> Aksi Relawan & Sertifikat
+              </a>
+            </li>
+            <li>
+              <a href="#posko" class="hover:text-teal-300 transition flex items-center gap-1.5 group">
+                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-600 group-hover:text-teal-400 transition"></i> Posko Siaga & Faskes
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- KOLOM 3: KONTAK DARURAT BENCANA (4 KOLOM DENGAN EFEK GLOW) -->
+        <div class="md:col-span-4 space-y-3">
+          <h4 class="text-xs font-black uppercase tracking-wider text-slate-200 border-b border-slate-800 pb-2 flex items-center justify-between">
+            <span>Kontak Darurat Bencana</span>
+            <span class="px-2 py-0.5 text-[9px] bg-red-950 text-red-400 border border-red-800 rounded-md font-bold">SIAGA 1</span>
+          </h4>
+
+          <div class="space-y-3">
+            <!-- Call Center BPBD -->
+            <a href="tel:08115000911" class="block p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-red-500/40 hover:border-red-400 transition shadow-[0_0_15px_rgba(239,68,68,0.15)] group">
+              <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-red-950 border border-red-500/50 rounded-xl text-red-400 group-hover:scale-105 transition">
+                  <i data-lucide="phone-call" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">CALL CENTER BPBD KALSEL</span>
+                  <span class="text-sm font-black text-white group-hover:text-red-300 transition">0811-5000-911</span>
+                </div>
+              </div>
+            </a>
+
+            <!-- Posko Manggala Agni -->
+            <a href="tel:113" class="block p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-amber-500/40 hover:border-amber-400 transition shadow-[0_0_15px_rgba(245,158,11,0.15)] group">
+              <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-950 border border-amber-500/50 rounded-xl text-amber-400 group-hover:scale-105 transition">
+                  <i data-lucide="siren" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">POSKO MANGGALA AGNI</span>
+                  <span class="text-sm font-black text-white group-hover:text-amber-300 transition">113 / 1131</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM BAR: COPYRIGHT & MIKOLA CREATOR CREDIT -->
+      <div class="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div>
+          <p>© 2026 <strong class="text-white">JagaUdara</strong> — Tanggap Karhutla & Oksigen Kalimantan.</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Dikembangkan oleh <span class="text-teal-400 font-semibold">Mikola & Tim</span> untuk Invention 2026.</p>
+        </div>
+
+        <div class="flex items-center gap-6 text-xs">
+          <a href="#" class="hover:text-teal-300 transition">Kebijakan Privasi</a>
+          <a href="#" class="hover:text-teal-300 transition">Syarat & Ketentuan</a>
+          <a href="#" class="hover:text-teal-300 transition">Dokumentasi API</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+  </main>
+
+  <!-- =================================================================
+    AREA POP-UP MODAL
+  ================================================================== -->
+
+  <!-- 1. MODAL LOGIN RELAWAN -->
+  <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+          <i data-lucide="user-check" class="w-5 h-5"></i>
+          <span id="authModalTitle">Akses Masuk Relawan</span>
+        </div>
+        <button type="button" onclick="closeLoginModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-3.5">
+        <div>
+          <label for="loginEmail" class="block text-xs font-semibold text-slate-300 mb-1">Email / WhatsApp Relawan</label>
+          <input type="text" id="loginEmail" required placeholder="contoh: relawan@jagaudara.id" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+        </div>
+
+        <div>
+          <label for="loginPassword" class="block text-xs font-semibold text-slate-300 mb-1">Kata Sandi</label>
+          <div class="relative">
+            <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition pr-10">
+            <button type="button" onclick="togglePasswordVisibility('loginPassword', 'eyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+              <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px]">
+          <label class="flex items-center gap-1.5 text-slate-400 cursor-pointer">
+            <input type="checkbox" class="rounded bg-slate-950 border-slate-800 text-emerald-500 focus:ring-0"> Ingat saya
+          </label>
+          <a href="#" onclick="alert('Instruksi pemulihan kata sandi telah dikirimkan ke kontak WhatsApp/Email Anda.'); return false;" class="text-emerald-400 hover:underline">Lupa kata sandi?</a>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Masuk ke Akun Relawan</span>
+        </button>
+      </form>
+
+      <div class="pt-2 border-t border-slate-800 text-center text-xs text-slate-400">
+        <span>Belum terdaftar? </span>
+        <button type="button" onclick="openRegisterModal()" class="text-emerald-400 font-bold hover:underline">Daftar Relawan Baru</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. MODAL FORM PENDAFTARAN RELAWAN BARU -->
+  <div id="registerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+          <i data-lucide="user-plus" class="w-5 h-5"></i>
+          <span>Pendaftaran Relawan Baru</span>
+        </div>
+        <button type="button" onclick="closeRegisterModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleRegisterSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nama Lengkap *</label>
+          <input type="text" id="regName" required placeholder="Contoh: Ahmad Subagja" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Email / No. WhatsApp *</label>
+          <input type="text" id="regContact" required placeholder="relawan@jagaudara.id" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Wilayah Domisili *</label>
+          <select id="regRegion" class="custom-select-box w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500">
+            <option value="Banjarbaru">Banjarbaru (Kalsel)</option>
+            <option value="Palangkaraya">Palangkaraya (Kalteng)</option>
+            <option value="Pontianak">Pontianak (Kalbar)</option>
+            <option value="Samarinda">Samarinda (Kaltim)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Buat Kata Sandi *</label>
+          <input type="password" id="regPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Daftar & Gabung Relawan</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODAL PROFIL RELAWAN LENGKAP -->
+  <div id="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+          <i data-lucide="user" class="w-5 h-5"></i>
+          <span>Profil & Riwayat Aksi Relawan</span>
+        </div>
+        <button type="button" onclick="closeProfileModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+    <!-- BOX PROFIL DINAMIS (ID DITAMBAHKAN) -->
+      <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-4">
+        <!-- ID Avatar Inisial -->
+        <div id="modalProfInitials" class="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
+          MK
+        </div>
+        <div>
+          <!-- ID Nama -->
+          <h3 class="text-sm font-bold text-white" id="modalProfName">Mikola</h3>
+          <!-- ID Peran / Jabatan -->
+          <p class="text-xs text-emerald-400 font-medium" id="modalProfRole">Founder & Lead Developer JagaUdara</p>
+          <!-- ID Registrasi & Wilayah -->
+          <p class="text-[10px] text-slate-400 mt-0.5" id="modalProfReg">ID Reg: JU-2026/FND-001 • Wilayah Kalimantan</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800">
+          <p class="text-lg font-black text-emerald-400">3</p>
+          <p class="text-[10px] text-slate-400">Laporan Valid</p>
+        </div>
+        <div class="border border-slate-800 p-2.5 bg-slate-950/80 rounded-xl">
+          <p class="text-lg font-black text-amber-400">12 Jam</p>
+          <p class="text-[10px] text-slate-400">Jam Kontribusi</p>
+        </div>
+        <div class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800">
+          <p class="text-lg font-black text-teal-400">Aktif</p>
+          <p class="text-[10px] text-slate-400">Status Sesi</p>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Aksi & Program Yang Diikuti:</h4>
+        
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-white">Pemadaman Gambut Ring I Bandara</span>
+            <span class="text-[9px] px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded border border-emerald-800">Selesai</span>
+          </div>
+          <p class="text-[11px] text-slate-400">24 Sep 2026 • Tim Gabungan Manggala Agni & BPBD</p>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-white">Pembagian 500 Masker N95 Warga</span>
+            <span class="text-[9px] px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded border border-emerald-800">Selesai</span>
+          </div>
+          <p class="text-[11px] text-slate-400">18 Sep 2026 • Posko Utama Liang Anggang</p>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-white">Penanaman 1.000 Pohon Ulin Gambut</span>
+            <span class="text-[9px] px-2 py-0.5 bg-amber-950 text-amber-400 rounded border border-amber-800">Mendatang</span>
+          </div>
+          <p class="text-[11px] text-slate-400">05 Okt 2026 • Komunitas Hijau Kalimantan</p>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 flex gap-2">
+        <button type="button" onclick="closeProfileModal(); openCertModal();" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
+          <i data-lucide="award" class="w-4 h-4"></i>
+          <span>Lihat Sertifikat Digital</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL SERTIFIKAT VOLUNTEER DIGITAL -->
+  <div id="certificateModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative overflow-hidden space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+          <i data-lucide="award" class="w-5 h-5"></i>
+          <span>Sertifikat Digital Relawan JagaUdara</span>
+        </div>
+        <button type="button" onclick="closeCertModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/60 border border-emerald-500/50 rounded-xl p-5 text-center relative shadow-2xl space-y-3">
+        <div class="flex justify-between items-center text-[10px] text-slate-400">
+          <span>No. Reg: JU-2026/VOL-889</span>
+          <span class="text-emerald-400 font-bold">Terverifikasi BPBD</span>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase font-bold text-emerald-400 tracking-widest">Sertifikat Penghargaan</p>
+          <h3 class="text-lg font-black text-white mt-1" id="certUserName">Ahmad Subagja</h3>
+          <p class="text-[11px] text-slate-300 mt-1 leading-snug">
+            Atas partisipasi aktif sebagai <strong>Relawan Pelapor Bencana Karhutla & Penjaga Udara Kalimantan 2026</strong>.
+          </p>
+        </div>
+        <div class="pt-2 border-t border-slate-800/80 flex justify-between items-center text-[10px] text-slate-400">
+          <span>Diterbitkan: September 2026</span>
+          <span class="font-mono text-emerald-300">JagaUdara System ID</span>
+        </div>
+      </div>
+
+      <button type="button" onclick="alert('🏅 Sertifikat Digital Anda berhasil diunduh (Format PDF)!')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 active:scale-95">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>Unduh Sertifikat Digital (PDF)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 5. MODAL DONASI INTERAKTIF -->
+  <div id="donateModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button type="button" onclick="closeDonateModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-white mb-1" id="modalProgramTitle">Salurkan Bantuan</h3>
+      <p class="text-xs text-slate-300 mb-5">Pilih nominal donasi Anda untuk program ini:</p>
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="selectNominal(25000)" class="nominal-btn py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-200 font-semibold hover:border-emerald-500 hover:text-emerald-400 transition">Rp 25.000</button>
+          <button type="button" onclick="selectNominal(50000)" class="nominal-btn py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-200 font-semibold hover:border-emerald-500 hover:text-emerald-400 transition">Rp 50.000</button>
+          <button type="button" onclick="selectNominal(100000)" class="nominal-btn py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-200 font-semibold hover:border-emerald-500 hover:text-emerald-400 transition">Rp 100.000</button>
+        </div>
+
+        <input type="number" id="customNominal" placeholder="Atau ketik nominal kustom (Rp)..." class="custom-number-input w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-500">
+
+        <button type="button" onclick="submitDonation()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg active:scale-95">
+          Lanjutkan Pembayaran Donasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL ONBOARDING GUIDE -->
+  <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      
+      <div class="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <button type="button" id="closeGuideBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2.5 bg-emerald-950/80 rounded-xl border border-emerald-800 text-emerald-400 shrink-0">
+          <i data-lucide="compass" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">Selamat Datang di JagaUdara</h3>
+          <p class="text-xs text-emerald-400 font-medium">Panduan Fitur Terpadu Platform</p>
+        </div>
+      </div>
+
+      <div class="space-y-3.5 my-5 text-xs text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-start gap-3">
+          <i data-lucide="map" class="w-4 h-4 text-teal-400 shrink-0 mt-0.5"></i>
+          <p><strong class="text-white">Peta GIS Real-Time:</strong> Pantau sebaran titik panas (<i class="italic">hotspot</i>) karhutla dan lokasi posko siaga berdasarkan koordinat satelit.</p>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-start gap-3">
+          <i data-lucide="siren" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i>
+          <p><strong class="text-white">Pelaporan Karhutla:</strong> Laporkan kejadian kebakaran lahan di sekitar Anda secara langsung dengan pengambil lokasi GPS otomatis.</p>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-start gap-3">
+          <i data-lucide="calculator" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+          <p><strong class="text-white">Edukasi & Kalkulator ISPA:</strong> Hitung estimasi risiko kesehatan akibat paparan asap dan pelajari 30 tips proteksi mandiri interaktif.</p>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-start gap-3">
+          <i data-lucide="bot" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+          <p><strong class="text-white">Asisten AI Karhutla:</strong> Tanyakan solusi mitigasi bencana dan pertolongan pertama kesehatan udara secara otomatis 24/7.</p>
+        </div>
+      </div>
+
+      <button type="button" id="startExploreBtn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-950/50 active:scale-95 flex items-center justify-center gap-2">
+        <span>Mulai Jelajahi Platform</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- PUSTAKA JAVASCRIPT & SCRIPT UTAMA -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
