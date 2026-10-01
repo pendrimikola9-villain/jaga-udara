@@ -965,170 +965,189 @@
     </div>
   </div>
 
-    <!-- SECTION KALKULATOR RISIKO ISPA & EDUKASI KESEHATAN -->
-    <section id="kalkulator" class="relative py-12 lg:py-20 px-4 border-t border-slate-800/80 overflow-hidden">
+<!-- SECTION KALKULATOR RISIKO ISPA & EDUKASI KESEHATAN -->
+<section id="kalkulator" class="relative py-12 lg:py-20 px-4 border-t border-slate-800/80 overflow-hidden">
+  
+  <!-- Background Image Overlay -->
+  <div class="absolute inset-0 z-0 pointer-events-none">
+    <img 
+      src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=2000&q=80" 
+      alt="Lahan Gambut Kalimantan" 
+      class="w-full h-full object-cover object-center opacity-55"
+    >
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-slate-950/90 z-1"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto relative z-10">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
+        <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
+        <span>Pencegahan Dini & Proteksi Mandiri</span>
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+        Edukasi Kesehatan & Kalkulator Risiko ISPA
+      </h2>
+      <p class="text-slate-200 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
+        Ukur potensi risiko paparan asap berdasarkan kondisi fisik Anda, serta pelajari 30 panduan proteksi mandiri interaktif (klik pada kartu untuk berputar).
+      </p>
+    </div>
+
+    <!-- Grid Container Main -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
-      <div class="absolute inset-0 z-0 pointer-events-none">
-        <img 
-          src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=2000&q=80" 
-          alt="Lahan Gambut Kalimantan" 
-          class="w-full h-full object-cover object-center opacity-55"
-        >
-        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-slate-950/90 z-1"></div>
-      </div>
-
-      <div class="max-w-7xl mx-auto relative z-10">
-        
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-xs font-semibold mb-3 backdrop-blur-md shadow-md">
-            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
-            <span>Pencegahan Dini & Proteksi Mandiri</span>
-          </div>
-          <h2 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">
-            Edukasi Kesehatan & Kalkulator Risiko ISPA
-          </h2>
-          <p class="text-slate-200 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
-            Ukur potensi risiko paparan asap berdasarkan kondisi fisik Anda, serta pelajari 30 panduan proteksi mandiri interaktif (klik pada kartu untuk berputar).
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          
-          <div class="lg:col-span-6 bg-slate-900/50 rounded-2xl border border-slate-700/60 p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between h-full">
+      <!-- Kolom Kiri: Kalkulator Paparan Asap -->
+      <div class="lg:col-span-6 bg-slate-900/50 rounded-2xl border border-slate-700/60 p-5 sm:p-6 shadow-2xl backdrop-blur-md flex flex-col justify-between h-full">
+        <div>
+          <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-700/60">
+            <div class="p-2.5 bg-emerald-950/80 rounded-xl border border-emerald-800/80 text-emerald-400">
+              <i data-lucide="calculator" class="w-6 h-6"></i>
+            </div>
             <div>
-              <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-700/60">
-                <div class="p-2.5 bg-emerald-950/80 rounded-xl border border-emerald-800/80 text-emerald-400">
-                  <i data-lucide="calculator" class="w-6 h-6"></i>
-                </div>
-                <div>
-                  <h3 class="text-lg font-bold text-white">Kalkulator Paparan Asap</h3>
-                  <p class="text-xs text-slate-300">Estimasi tingkat risiko paparan asap harian.</p>
-                </div>
-              </div>
-
-              <div class="space-y-4 mb-4">
-                <div>
-                  <label for="calcAge" class="block text-xs font-semibold text-slate-200 mb-2">Kategori Usia Pelapor / Keluarga:</label>
-                  <select id="calcAge" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
-                    <option value="balita">Anak-anak / Balita (0 - 11 Tahun)</option>
-                    <option value="remaja">Remaja (12 - 17 Tahun)</option>
-                    <option value="dewasa" selected>Dewasa (18 - 59 Tahun)</option>
-                    <option value="lansia">Lansia (≥ 60 Tahun)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="calcDisease" class="block text-xs font-semibold text-slate-200 mb-2">Riwayat Komorbid / Penyakit Pernapasan:</label>
-                  <select id="calcDisease" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
-                    <option value="none" selected>Tidak Ada / Sehat</option>
-                    <option value="asma">Asma / Bronkitis Kronis</option>
-                    <option value="ispa">Pernah Terkena ISPA Berat</option>
-                    <option value="jantung">Riwayat Penyakit Jantung / PPOK</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="calcDuration" class="block text-xs font-semibold text-slate-200 mb-2">Durasi Aktivitas Luar Ruangan (Jam/Hari):</label>
-                  <input type="number" id="calcDuration" value="2" min="1" max="24" class="custom-number-input w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm">
-                </div>
-
-                <button type="button" id="btnCalculateRisk" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3.5 rounded-xl transition shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 active:scale-95 mt-2">
-                  <i data-lucide="activity" class="w-4 h-4"></i>
-                  <span>Hitung Risiko Kesehatan</span>
-                </button>
-              </div>
-            </div>
-
-            <div id="riskResultBox" class="p-4 rounded-xl bg-slate-950/80 border border-slate-700/80 flex items-start gap-3 backdrop-blur-sm">
-              <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
-              <div>
-                <p class="text-xs font-bold text-amber-300 mb-0.5" id="riskTitle">Status Risiko: SEDANG (MODERATE)</p>
-                <p class="text-xs text-slate-200 leading-relaxed" id="riskDesc">Batasi olahraga berat di luar ruangan dan persiapkan masker N95 saat keluar rumah.</p>
-              </div>
+              <h3 class="text-lg font-bold text-white">Kalkulator Paparan Asap</h3>
+              <p class="text-xs text-slate-300">Estimasi tingkat risiko paparan asap harian.</p>
             </div>
           </div>
 
-          <div class="lg:col-span-6 flex flex-col justify-between h-full space-y-2.5">
-            
-            <div class="flex items-center justify-between pb-2 border-b border-slate-700/60">
-              <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                <i data-lucide="book-open" class="w-4 h-4"></i>
-                <span id="eduCounterText">Edukasi 1 dari 30</span>
-              </span>
-              <span class="text-[11px] text-slate-400 italic">💡 Klik kartu untuk memutar tips</span>
+          <div class="space-y-4 mb-4">
+            <div>
+              <label for="calcAge" class="block text-xs font-semibold text-slate-200 mb-2">Kategori Usia Pelapor / Keluarga:</label>
+              <select id="calcAge" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
+                <option value="balita">Anak-anak / Balita (0 - 11 Tahun)</option>
+                <option value="remaja">Remaja (12 - 17 Tahun)</option>
+                <option value="dewasa" selected>Dewasa (18 - 59 Tahun)</option>
+                <option value="lansia">Lansia (≥ 60 Tahun)</option>
+              </select>
             </div>
 
-            <div class="flex flex-col justify-between gap-3 flex-1">
+            <div>
+              <label for="calcDisease" class="block text-xs font-semibold text-slate-200 mb-2">Riwayat Komorbid / Penyakit Pernapasan:</label>
+              <select id="calcDisease" class="custom-select-box w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm cursor-pointer">
+                <option value="none" selected>Tidak Ada / Sehat</option>
+                <option value="asma">Asma / Bronkitis Kronis</option>
+                <option value="ispa">Pernah Terkena ISPA Berat</option>
+                <option value="jantung">Riwayat Penyakit Jantung / PPOK</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="calcDuration" class="block text-xs font-semibold text-slate-200 mb-2">Durasi Aktivitas Luar Ruangan (Jam/Hari):</label>
+              <input type="number" id="calcDuration" value="2" min="1" max="24" class="custom-number-input w-full bg-slate-950/90 border border-slate-700/80 text-slate-100 text-sm rounded-xl py-3.5 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-sm">
+            </div>
+
+            <button type="button" id="btnCalculateRisk" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3.5 rounded-xl transition shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 active:scale-95 mt-2">
+              <i data-lucide="activity" class="w-4 h-4"></i>
+              <span>Hitung Risiko Kesehatan</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="riskResultBox" class="p-4 rounded-xl bg-slate-950/80 border border-slate-700/80 flex items-start gap-3 backdrop-blur-sm mt-4">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+          <div>
+            <p class="text-xs font-bold text-amber-300 mb-0.5" id="riskTitle">Status Risiko: SEDANG (MODERATE)</p>
+            <p class="text-xs text-slate-200 leading-relaxed" id="riskDesc">Batasi olahraga berat di luar ruangan dan persiapkan masker N95 saat keluar rumah.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan: Kartu Edukasi Interaktif -->
+      <div class="lg:col-span-6 flex flex-col justify-between space-y-4">
+        
+        <!-- Header Kartu Edukasi -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-700/60">
+          <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span id="eduCounterText">Edukasi 1 dari 30</span>
+          </span>
+          <span class="text-[11px] text-slate-400 italic">💡 Klik kartu untuk memutar tips</span>
+        </div>
+
+        <!-- Daftar Kartu Flip (Diberi Jarak & Ukuran Dinamis) -->
+        <div class="flex flex-col gap-4">
+          
+          <!-- Kartu 01 -->
+          <div class="flip-card cursor-pointer group min-h-[120px] sm:min-h-[110px] w-full" data-card-index="0">
+            <div class="flip-card-inner relative w-full h-full min-h-[120px] sm:min-h-[110px]">
               
-              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="0">
-                <div class="flip-card-inner relative w-full h-full">
-                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
-                    <div class="p-3 bg-amber-950/60 border border-amber-800/80 text-amber-400 rounded-xl shrink-0">
-                      <i data-lucide="shield-check" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront0">Gunakan Masker Standar N95 / KN95</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront0">Masker kain biasa tidak mampu menyaring partikel mikro berbahaya (PM2.5) dari asap Karhutla.</p>
-                    </div>
-                  </div>
-
-                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
-                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
-                      <i data-lucide="sparkles" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack0">Tips Berikutnya</h4>
-                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack0">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
-                    </div>
-                  </div>
+              <!-- Sisi Depan -->
+              <div class="flip-card-front absolute inset-0 bg-slate-900/80 group-hover:bg-slate-800/90 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-md">
+                <div class="p-3 bg-amber-950/60 border border-amber-800/80 text-amber-400 rounded-xl shrink-0">
+                  <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront0">Gunakan Masker Standar N95 / KN95</h4>
+                  <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront0">Masker kain biasa tidak mampu menyaring partikel mikro berbahaya (PM2.5) dari asap Karhutla.</p>
                 </div>
               </div>
 
-              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="1">
-                <div class="flip-card-inner relative w-full h-full">
-                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
-                    <div class="p-3 bg-emerald-950/60 border border-emerald-800/80 text-emerald-400 rounded-xl shrink-0">
-                      <i data-lucide="air-vent" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront1">Tutup Ventilasi & Gunakan Air Purifier</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront1">Saat indeks ISPU di atas 150, tutup rapat jendela dan gunakan pemurni udara indoor.</p>
-                    </div>
-                  </div>
-
-                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
-                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
-                      <i data-lucide="sparkles" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack1">Tips Berikutnya</h4>
-                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack1">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
-                    </div>
-                  </div>
+              <!-- Sisi Belakang -->
+              <div class="flip-card-back absolute inset-0 bg-slate-900/95 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-xl">
+                <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                  <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack0">Tips Berikutnya</h4>
+                  <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack0">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
                 </div>
               </div>
 
-              <div class="flip-card cursor-pointer group flex-1 h-[115px]" data-card-index="2">
-                <div class="flip-card-inner relative w-full h-full">
-                  <div class="flip-card-front absolute inset-0 bg-slate-900/60 group-hover:bg-slate-800/80 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-md">
-                    <div class="p-3 bg-cyan-950/60 border border-cyan-800/80 text-cyan-400 rounded-xl shrink-0">
-                      <i data-lucide="droplet" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront2">Perbanyak Konsumsi Air Putih & Vitamin C</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront2">Menjaga tenggorokan tetap basah membantu melarutkan partikel debu halus di saluran pernapasan.</p>
-                    </div>
-                  </div>
+            </div>
+          </div>
 
-                  <div class="flip-card-back absolute inset-0 bg-slate-900/90 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-4 shadow-xl">
-                    <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
-                      <i data-lucide="sparkles" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack2">Tips Berikutnya</h4>
-                      <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack2">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
-                    </div>
-                  </div>
+          <!-- Kartu 02 -->
+          <div class="flip-card cursor-pointer group min-h-[120px] sm:min-h-[110px] w-full" data-card-index="1">
+            <div class="flip-card-inner relative w-full h-full min-h-[120px] sm:min-h-[110px]">
+              
+              <!-- Sisi Depan -->
+              <div class="flip-card-front absolute inset-0 bg-slate-900/80 group-hover:bg-slate-800/90 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-md">
+                <div class="p-3 bg-emerald-950/60 border border-emerald-800/80 text-emerald-400 rounded-xl shrink-0">
+                  <i data-lucide="air-vent" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront1">Tutup Ventilasi & Gunakan Air Purifier</h4>
+                  <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront1">Saat indeks ISPU di atas 150, tutup rapat jendela dan gunakan pemurni udara indoor.</p>
+                </div>
+              </div>
+
+              <!-- Sisi Belakang -->
+              <div class="flip-card-back absolute inset-0 bg-slate-900/95 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-xl">
+                <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                  <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack1">Tips Berikutnya</h4>
+                  <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack1">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Kartu 03 -->
+          <div class="flip-card cursor-pointer group min-h-[120px] sm:min-h-[110px] w-full" data-card-index="2">
+            <div class="flip-card-inner relative w-full h-full min-h-[120px] sm:min-h-[110px]">
+              
+              <!-- Sisi Depan -->
+              <div class="flip-card-front absolute inset-0 bg-slate-900/80 group-hover:bg-slate-800/90 border border-slate-700/60 group-hover:border-emerald-500/50 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-md">
+                <div class="p-3 bg-cyan-950/60 border border-cyan-800/80 text-cyan-400 rounded-xl shrink-0">
+                  <i data-lucide="droplet" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition" id="eduTitleFront2">Perbanyak Konsumsi Air Putih & Vitamin C</h4>
+                  <p class="text-xs text-slate-300 leading-relaxed" id="eduDescFront2">Menjaga tenggorokan tetap basah membantu melarutkan partikel debu halus di saluran pernapasan.</p>
+                </div>
+              </div>
+
+              <!-- Sisi Belakang -->
+              <div class="flip-card-back absolute inset-0 bg-slate-900/95 border border-emerald-500/60 p-4 rounded-2xl backdrop-blur-md flex items-center gap-3.5 shadow-xl">
+                <div class="p-3 bg-emerald-950/80 border border-emerald-700/80 text-emerald-400 rounded-xl shrink-0">
+                  <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div class="pr-2">
+                  <h4 class="text-sm font-bold text-emerald-300 mb-1" id="eduTitleBack2">Tips Berikutnya</h4>
+                  <p class="text-xs text-slate-200 leading-relaxed" id="eduDescBack2">Klik lagi untuk memutar ke materi edukasi selanjutnya.</p>
                 </div>
               </div>
 
@@ -1138,7 +1157,11 @@
         </div>
 
       </div>
-    </section>
+
+    </div>
+
+  </div>
+</section>
 
     <!-- SECTION TANYA AI KARHUTLA -->
     <section id="edukasi-ai" class="relative min-h-screen py-16 px-4 overflow-hidden bg-slate-950 flex items-center">
